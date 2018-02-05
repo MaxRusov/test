@@ -1,0 +1,248 @@
+
+;;
+;; Shell Bookmark - закладки в панелях
+;; (c) Max Rusov
+;; (i) Kerberos464
+;; http://forum.farmanager.com/viewtopic.php?f=15&t=6137
+;;
+;; RCtrlShift+БуквыИлиЦифры - Установить закладку
+;; RCtrl+БуквыИлиЦифры      - Перейти к закладке
+;; Ctrl+/                   - Меню закладок
+;;
+
+
+const MacroLib = "84884660-5B2F-4581-9282-96E00AE109A2"
+const FarHints  = "CDF48DA0-0334-4169-8453-69048DD3B51C" 
+
+
+macro Area="Shell" Description="Shell Bookmark: Start"
+  Key="RCtrl:Down" EatOnRun=0
+{{
+  _G.BookmarkName = ""
+}}
+
+
+macro Area="Shell" Description="Shell Bookmark: Define"
+  Key="/RCtrlShift\w/"
+{{
+  _G.BookmarkMode = true;
+  _G.BookmarkName = _G.BookmarkName .. mf.akey(2):sub(-1)
+}}
+
+
+macro Area="Shell" Description="Shell Bookmark: Go to"
+  Key="/RCtrl\w/"
+{{
+  _G.BookmarkMode = false;
+  _G.BookmarkName = _G.BookmarkName .. mf.akey(2):sub(-1)
+}}
+
+
+// Если при нажата CtrlShift и раньше отпускается Ctrl, то макрос на Ctrl:Up не вызывается
+// Это затычка, для обхода этой проблемы (ошибка в MacrLib?)
+
+macro Area="Shell" Description="Shell Bookmark: Finish" Priority=-1
+  Key="Shift:Up"
+{{
+  #include_macro_once "BookmarkFunc"
+
+  if _G.BookmarkName and _G.BookmarkMode then
+    Name = _G.BookmarkName
+    _G.BookmarkName = nil
+    _G.ShellBookmarkGoto(Name, true)
+  end
+}}
+
+
+
+macro Area="Shell" Name="GotoBookmark" Description="Shell Bookmark: Finish" Priority=-1
+   Key="RCtrl:Up"
+{{
+  #include_macro_once "BookmarkFunc"
+
+  if _G.BookmarkName then
+    Name = _G.BookmarkName
+    _G.BookmarkName = nil
+    _G.ShellBookmarkGoto(Name, _G.BookmarkMode)
+  end
+}}
+
+
+
+macro Area="Shell" Description="Shell Bookmark: Menu" Key="Ctrl/"
+{{
+  #include_macro_once "BookmarkFunc"
+
+  _G.ShellBookmarkMenu()
+}}
+
+
+
+//-----------------------------------------------------------------------------
+// Глобальные функции
+
+
+macro Name="BookmarkFunc"
+{{
+  function ExpandEnv(Str)
+    return (Str:gsub("%%(.-)%%", win.GetEnv))
+  end
+
+
+  function EnumSettings(keyname)
+    local obj = far.CreateSettings()
+    local key = obj:OpenSubkey(0, keyname)
+    local res = key and obj:Enum(key)
+    obj:Free()
+    return res
+  end
+
+ 
+  function _G.ShellBookmarkGoto(Name, Define)
+    if not Name or (Name == "") then
+      return
+    end
+
+    local Bookmark = "Folder" .. Name; -- FolderA, FolderB, FolderC,...
+    local Folder = ""
+
+    if Define then
+      local OldFolder = mf.mload("ShellBookmark", Bookmark)
+
+      if APanel.Plugin then
+        Folder = APanel.Prefix
+        if APanel.HostFile ~= nil then
+          Folder = Folder .. ":" .. APanel.HostFile
+        end
+        Folder = Folder .. ":" .. APanel.Path
+      else
+        Folder = APanel.Path
+      end
+
+      if OldFolder ~= nil then
+        Replace = msgbox("Bookmark " .. Name, "Already assigned to:\n" .. OldFolder .. "\n Do you want redefine it?\n", 0x40000);
+        if Replace ~= 1 then
+          return
+        end
+      end
+
+      Folder = prompt("Bookmark " .. Name, "Assign to:", 0x10, Folder, "Shell.Bokmark");
+      if Folder == false then
+        return
+      end
+
+      mf.msave("ShellBookmark", Bookmark, Folder)
+    else
+      Folder = mf.mload("ShellBookmark", Bookmark)
+
+      if Folder then
+
+        -- Раскрываем переменные среды
+        Folder = ExpandEnv(Folder)
+
+        if (mf.substr(Folder, 1, 1) == ":") or (mf.substr(Folder, 0, 2) == "\\\\") then
+          Panel.SetPath(0, Folder)
+        else
+          print(Folder)
+          Keys("Enter")
+        end
+
+        Plugin.Call(#%FarHints, "Info", "")
+        Plugin.Call(#%FarHints, "FontSize", 14)
+--      Plugin.Call(#%FarHints, "Color", 0x0000FF)
+--      Plugin.Call(#%FarHints, "FontColor", 0x00FFFF)
+        Plugin.Call(#%FarHints, "Info", Folder)
+
+      else
+        if (mf.len(Name) == 1) and (Name >= "0") and (Name <= "9") then
+          -- Разрешим работу стандартных шорткатов
+          Keys("RCtrl" .. Name)
+        else
+          mf.beep(0x10);
+        end
+      end
+    end
+  end
+  
+  function _G.ShellBookmarkMenu()
+    while true do
+      Folders = EnumSettings("ShellBookmark")
+
+      Lines = ""
+      for i = 1, Folders.Count do
+        Name = Folders[i].Name
+        if mf.index(Name, "Folder") == 0 then
+          Key = mf.substr(Name, 6)
+          Folder = mf.mload("ShellBookmark", Name)
+          if Folder then
+            Key1 = Key
+            if Key1:len() < 3 then
+              Key1 = Key1 .. mf.substr("   ", 0, 3 - Key1:len());
+            end
+            Lines = Lines .. (Key:len() == 1 and "&" or "") .. Key1 .. " - " .. Folder .. "\n";
+          end
+        end
+      end
+
+      Res = Menu.Show(Lines, "Bookmarks\nIns - select", 0x10 or 0x20)
+      if Res == "" then
+        return
+      end
+
+      if mf.index(Res, "\n") >= 0 then
+
+        Code = Menu.Show("&Edit\n&Delete\n&Cancel", "Bookmarks", 0x8);
+        if Code == 0 then
+          return
+        end
+
+        while (Res ~= "") do
+
+          Pos = mf.index(Res, "\n");
+          if Pos >= 0 then
+            Str = mf.substr(Res, 0, Pos);
+            Res = mf.substr(Res, Pos + 1);
+          else
+            Str = Res;
+            Res = "";
+          end
+
+          Key = mf.trim(mf.replace(mf.substr(Str, 0, mf.index(Str, "-")), "&", ""));
+          Bookmark = "Folder" .. Key; 
+
+          Folder = mf.substr(Str, mf.index(Str, "-") + 2);
+
+          if Code == 1 then
+            Folder = prompt("Bookmark " .. Key, "Assign to:", 0x10, Folder, "Shell.Bokmark");
+            if Folder == false then
+              return
+            end
+            mf.msave("ShellBookmark", Bookmark, Folder)
+          end
+          if Code == 2 then
+            mf.mdelete("ShellBookmark", Bookmark)
+          end
+
+        end
+
+        return
+      end
+
+      Folder = mf.substr(Res, mf.index(Res, "-") + 2);
+
+      if Folder then
+        -- Goto
+        Folder = ExpandEnv(Folder)
+
+        if (mf.substr(Folder, 1, 1) == ":") or (mf.substr(Folder, 0, 2) == "\\\\") then
+          Panel.SetPath(0, Folder)
+        else
+          print(Folder)
+          Keys("Enter")
+        end
+
+        return
+      end
+    end
+  end
+}}
