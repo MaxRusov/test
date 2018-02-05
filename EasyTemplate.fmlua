@@ -1,0 +1,219 @@
+﻿;;
+;; Шаблоны автоподстановки
+;; (c) Max Rusov
+;;
+
+macro Descr="Easy Template: expand template" Area="Editor" Keys="Space"
+{{
+  #include_macro_once "EasyTemplateCommonSettings"
+  #include_macro_once "EasyTemplateUserSettings"
+  #include_macro_once "TemplateFunc"
+
+  if not _G.EasyTemplateExpand(nil) then
+    Keys("Space")
+  end
+}}
+
+
+macro Descr="Easy Template: expand nearest template" Area="Editor" Keys="CtrlJ"
+{{
+  #include_macro_once "EasyTemplateCommonSettings"
+  #include_macro_once "EasyTemplateUserSettings"
+  #include_macro_once "TemplateFunc"
+
+  _G.EasyTemplateList(nil)
+}}
+
+
+macro Descr="Easy Template: List of all templates" Area="Editor" Keys="CtrlShiftJ"
+{{
+  #include_macro_once "EasyTemplateCommonSettings"
+  #include_macro_once "EasyTemplateUserSettings"
+  #include_macro_once "TemplateFunc"
+
+  _G.EasyTemplateListAll(nil)
+}}
+
+
+//-----------------------------------------------------------------------------
+// Глобальные функции
+
+macro Name="TemplateFunc"
+{{
+  function StrIn(AStr, AListStr, APart)
+    local iStr
+    for iStr in AListStr:gmatch("[^%s,]+") do
+      if (iStr == AStr) or (APart and (iStr:find(AStr) == 1)) then
+        return true
+      end
+    end
+    return false
+  end
+   
+
+  function FindTemplate(AName, AWord, APart)
+    local vExt = mf.fsplit(AName, 8):sub(2):lower()
+    local vTpl = {}
+    for i, vRow in ipairs(Settings) do
+      if StrIn(vExt, vRow[1]) then
+        for j, vTempl in ipairs(vRow[2]) do
+          if not AWord or StrIn(AWord, vTempl[1], APart) then
+            vTpl[#vTpl + 1] = vTempl
+          end
+        end
+      end
+    end
+    if #vTpl > 1 then
+      local vItems = ""
+      for i = 1, #vTpl do
+        vItems = vItems .. "&" .. (i <= 9 and i or string.char(65 + i - 10) ) .. " " .. vTpl[i][2] .. "\n"
+      end
+      local vRes = Menu.Show(vItems, "Templates", 8)
+      if vRes == 0 then
+        return false
+      end
+      return vTpl[vRes]
+    else
+      return vTpl[1]
+    end
+  end
+  
+
+  function InsertTemplate(Id, AOldLen, ATemplate)
+    editor.UndoRedo(Id, "EUR_BEGIN")
+
+    if AOldLen == 0 then
+      print(" ")
+      AOldLen = 1
+    end
+
+    local vInfo = editor.GetInfo()
+
+    local vRow1 = vInfo.CurLine
+    local vPos1 = vInfo.CurPos
+    if AOldLen > 0 then
+      vPos1 = vPos1 - AOldLen
+      editor.Select(Id, 1, vRow1, vPos1, AOldLen, 1)
+    end
+
+    local vRowStr = editor.GetString(Id).StringText;
+    local vPreStr = vRowStr:sub(0, vPos1):gsub("%S", " ")
+
+
+    vPat = ATemplate[3]
+
+    local vSetCol1, vSetCol2, vSetRow1, vSetRow2
+
+    local n = 0
+    while vPat do
+      local i = mf.index(vPat, "\n")
+      if i >= 0 then
+        vStr = vPat:sub(0, i)
+        vPat = vPat:sub(i + 2)
+      else
+        vStr = vPat
+        vPat = nil
+      end
+
+      local j = mf.index(vStr, "%_")
+      if j >= 0 then
+        vStr = vStr:gsub("%%_", "")
+        vSetCol1 = j
+        vSetRow1 = n
+      end
+
+      local j = mf.index(vStr, "_%")
+      if j >= 0 then
+        vStr = vStr:gsub("_%%", "")
+        vSetCol2 = j
+        vSetRow2 = n
+      end
+
+      if n > 0 then
+        vStr = vPreStr .. vStr
+      end
+      if vPat then
+        vStr = vStr .. "\n"
+      end
+
+      print(vStr)
+
+      n = n + 1
+    end
+
+    if vSetRow1 then
+      if vSetRow2 then
+        editor.Select(Id, 1, vRow1 + vSetRow1, vPos1 + vSetCol1, vSetCol2 - vSetCol1, vSetRow2 - vSetRow1 + 1)
+      end
+      editor.SetPosition(Id, vRow1 + vSetRow1, vPos1 + vSetCol1)
+    end
+
+    editor.UndoRedo(Id, "EUR_END")
+  end
+  
+
+  function _G.EasyTemplateExpand(Id)
+    local vRowStr = mf.trim(editor.GetString(Id).StringText, 2)
+    if editor.GetInfo().CurPos ~= vRowStr:len() then 
+      return false
+    end
+
+--  local vWord = vRowStr:gsub("^.-%s-([^%s]+)%s*$", "%1")
+--  local vWord = vRowStr:gsub("^.*%s+([^%s]+)$", "%1")
+    local vWord = mf.trim(vRowStr)
+
+    local vTemplate = FindTemplate( Editor.FileName, vWord )
+    if not vTemplate then
+      return false
+    end
+
+    InsertTemplate(Id, vWord:len(), vTemplate)
+    return true
+  end 
+
+
+  function _G.EasyTemplateList(Id)
+    local vRowStr = editor.GetString(Id).StringText;
+    local n = editor.GetInfo().CurPos
+    local i = n
+    while (i > 0) and far.LIsAlphanum(vRowStr:sub(i, i)) do
+      i = i - 1
+    end
+    local vWord = vRowStr:sub(i + 1, n)
+
+    local vTemplate = FindTemplate( Editor.FileName, vWord, true )
+    if not vTemplate then
+      if vTemplate == nil then  
+        mf.beep()                
+      end
+      return false 
+    end
+
+    InsertTemplate(Id, vWord:len(), vTemplate)
+    return true
+  end
+
+
+  function _G.EasyTemplateListAll(Id)
+    local vTemplate = FindTemplate( Editor.FileName )
+    if not vTemplate then
+      return false
+    end
+
+    InsertTemplate(Id, 0, vTemplate)
+    return true
+  end
+
+
+  function AppendArray(A1, A2)
+    for i = 1, #A2 do
+      A1[#A1 + 1] = A2[i]
+    end
+    return A1
+  end
+
+
+  if UserSettings then
+    Settings = AppendArray(Settings, UserSettings)
+  end
+}}

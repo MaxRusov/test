@@ -1,0 +1,107 @@
+
+;;
+;; FastFilter - быстра€ фильтраци€ в панел€х
+;; (c) Max Rusov
+;;
+;;RAlt+Ѕуквы»ли÷ифры Ч ‘ильтраци€, добавить символ к фильтру
+;;RAlt+BS            Ч ”далить символ из фильтра
+;;RAlt+/             Ч –едактировать фильтр в диалоге
+;;RAlt+-             Ч ¬ключить/выключить режим исключающего фильтра
+;;RAlt+\             Ч ¬ключить/выключить режим фильтрации каталогов
+;;RAlt               Ч ”далить весь фильтр
+;;
+
+const FarHints  = 'CDF48DA0-0334-4169-8453-69048DD3B51C' 
+
+
+macro
+  Name="FastFilterClear"
+  Descr="Fast filter: Clear Filter"
+  Bind="RAlt:Release"
+  Area="Shell"
+{{
+  #include_macro_once "FilterFunc"
+  _G.FastFilter = nil  _G.FastFilterExc = false  _G.FastFilterSet("", false, false)}}
+
+
+macro
+  Descr="Fast filter: Add symbol"
+  Bind="/RAlt\w/ RAlt, RAlt."
+  Area="Shell"
+{{
+  #include_macro_once "FilterFunc"
+
+  s = mf.akey(2):sub(-1)  if not _G.FastFilter then    _G.FastFilter = s;    _G.FastFilterExc = nil;   -- Ќе запоминаем     if _G.FastFilterDir == nil then      _G.FastFilterDir = mf.mload("FastFilter", "FilterDir")    end    Plugin.Call(#%FarHints, "Info", "")  else    _G.FastFilter = _G.FastFilter .. s;  end;  _G.FastFilterSet(_G.FastFilter, _G.FastFilterExc, _G.FastFilterDir)}}
+
+
+macro
+  Descr="Fast filter: Delete symbol"
+  Bind="RAltBS"
+  Area="Shell"
+{{
+  #include_macro_once "FilterFunc"
+
+  if _G.FastFilter then--  _G.FastFilter = mf.substr(_G.FastFilter, 0, -1);    _G.FastFilter = _G.FastFilter:sub(1, -2)    _G.FastFilterSet(_G.FastFilter, _G.FastFilterExc, _G.FastFilterDir)  end}}
+
+
+macro
+  Name="FastFilterPrompt"
+  Descr="Fast filter: Input filter"
+  Bind="RAlt/"
+  Area="Shell"
+{{
+  #include_macro_once "FilterFunc"
+  _G.FastFilter = prompt("Fast filter", "Input Filter:", 8, _G.FastFilter, "FastFilter.Text");  if not _G.FastFilter then    return  end  _G.FastFilterSet(_G.FastFilter, _G.FastFilterExc, _G.FastFilterDir)}}
+
+
+macro
+  Name="FastFilterInclusive"
+  Descr="Fast filter: Inclusive/Exclisive filter"
+  Bind="RAlt-"
+  Area="Shell"
+{{
+  #include_macro_once "FilterFunc"
+
+  _G.FastFilterExc = not _G.FastFilterExc  _G.FastFilterExclusive(_G.FastFilterExc)}}
+
+
+macro
+  Name="FastFilterToggleFolder"
+  Descr="Fast filter: Toggle folder filter"
+  Bind="RAltBackSlash"
+  Area="Shell"
+{{
+  #include_macro_once "FilterFunc"
+
+  _G.FastFilterDir = not _G.FastFilterDir;  mf.msave("FastFilter", "FilterDir", _G.FastFilterDir)
+
+  _G.FastFilterDirectory(_G.FastFilterDir)}}
+
+
+//-----------------------------------------------------------------------------
+// √лобальные функции
+
+macro Name="FilterFunc"
+{{
+  FilterName = "$FastFilter"
+
+
+  function ShowHint()
+    if _G.FastFilter then
+--    Plugin.Call(#%FarHints, "Info", "")      Plugin.Call(#%FarHints, "FontSize", 14)        Plugin.Call(#%FarHints, "Info", (_G.FastFilterExc and "-" or "") .. _G.FastFilter, -1, -4, 3000)    else      Plugin.Call(#%FarHints, "Info", "")    end  end
+
+
+  function _G.FastFilterSet(AFilter, AExclusive, AFilterDir)
+    local s1, s2
+
+    Keys("CtrlI")    if Menu.Select(FilterName, 1) == 0 then       if AFilter == "" then        Keys("Esc")        ShowHint()        return      end      Keys("Ins")      print(FilterName)      Keys("Tab Tab")      s1 = "*" .. AFilter .. "*";      s2 = mf.xlat(s1);      if  s1 ~= s2 then         s1 = s1 .. "," .. s2;      end      print(s1)      if AFilterDir then         -- ‘ильтруем каталоги тоже        Keys("AltD Multiply")      end      Keys("Enter")      if AExclusive then          Keys("Subtract")      else        Keys("Add")      end    else      if AFilter == "" then        Keys("DEL Enter")      else        Keys("F4")         Keys("Tab Tab")         s1 = "*" .. AFilter .. "*";        s2 = mf.xlat(s1);        if  s1 ~= s2 then           s1 = s1 .. "," .. s2;        end        print(s1)              Keys("Enter")      end    end    Keys("Enter")      ShowHint()  end
+
+
+  function _G.FastFilterExclusive(AOn)
+    Keys("CtrlI")    if  Menu.Select(FilterName, 1) > 0 then       Keys("BS")      Menu.Select(FilterName, 1)      if AOn then          Keys("Subtract")      else        Keys("Add")      end      Keys("Enter")      ShowHint()    else      Keys("Esc")    end  end
+
+
+  function _G.FastFilterDirectory(AOn)
+    Keys("CtrlI")    if Menu.Select(FilterName, 1) > 0 then       Keys("F4")      Keys("AltD")      if AOn then          Keys("Multiply")      else        Keys("Subtract")      end      Keys("Enter")      Keys("Enter")      ShowHint()    else      Keys("Esc")    end  end
+
+}}

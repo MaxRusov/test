@@ -1,0 +1,184 @@
+﻿
+macro Name="EasyTemplateCommonSettings"
+{{
+Settings = {
+
+  {"pas,pp,dpr", 
+  {
+    { "proc,procedure", "procedure",
+      "procedure %_Name_%();\n"..
+      "begin\n"..
+      "end;" 
+    },
+
+    { "func,function", "function",
+      "function %_Name_%() :Integer;\n"..
+      "begin\n"..
+      "  Result := 0;\n" ..
+      "end;" 
+    },
+
+    { "beg,begin", "begin-end",
+      "begin\n"..
+      "  %_\n"..
+      "end;" 
+    },
+
+    { "if", "if-then",
+      "if %_ then\n"..
+      "  ;" 
+    },
+
+    { "ife", "if-then-else",
+      "if %_ then\n"..
+      "  \n"..
+      "else\n"..
+      "  ;"
+    },
+
+    { "for,fori", "for",
+      "for i = 0 to %_Count - 1 do begin\n"..
+      "  \n" ..
+      "end;" 
+    },
+
+    { "ford", "for downto",
+      "for i = %_Count - 1 downto 0 do begin\n"..
+      "  \n" ..
+      "end;" 
+    },
+
+    { "while", "while",
+      "while %_Condition_% do begin\n"..
+      "  \n" ..
+      "end;" 
+    },
+
+    { "repeat", "repeat-until",
+      "repeat\n"..
+      "  \n" ..
+      "until %_Condition_%;" 
+    },
+
+    { "case", "case",
+      "case %_Value_% of\n"..
+      "  0: {};\n" ..
+      "  1: {};\n" ..
+      "else\n" ..
+      "  {}\n" ..
+      "end;" 
+    },
+
+    { "try,tryf", "try-finally",
+      "try\n"..
+      "  %_\n"..
+      "finally\n"..
+      "  \n"..
+      "end;"
+    },
+
+    { "trye", "try-except",
+      "try\n"..
+      "  %_\n"..
+      "except\n"..
+      "  \n"..
+      "end;"
+    },
+
+  } },
+
+
+  {"c,cpp,h,hpp",  
+  {
+    { "if", "if-then",
+      "if (%_)\n"..
+      "{\n"..
+      "}" 
+    },
+
+    { "ife", "if-then-else",
+      "if (%_)\n"..
+      "{\n" ..
+      "}\n" ..
+      "else\n" ..
+      "{\n" ..
+      "}"
+    },
+
+    { "for,fori", "for",
+      "for (int i = 0; i < %_Count; i++)\n"..
+      "{\n"..
+      "}" 
+    },
+
+    { "while", "while",
+      "while (%_Condition_%)\n"..
+      "{\n"..
+      "}" 
+    },
+
+
+  } },
+
+
+  {"fml,fmlua",  
+  {
+    { "macro", "macro definition",
+      'macro Descr="%_Описание_%" Key="" Area=""\n'..
+      '\{\{\n' ..
+      '  -- Текст макроса...\n' ..
+      '\}\}' 
+    }
+  } },
+
+
+  {"lua,fmlua",  
+  {
+    { "func,function", "function",
+      "function %_Name_%()\n"..
+      "  \n" ..
+      "end" 
+    },
+
+    { "if", "if-then",
+      "if %_ then\n"..
+      "  \n" ..
+      "end" 
+    },
+
+    { "ife", "if-then-else",
+      "if %_ then\n"..
+      "  \n" ..
+      "else\n" ..
+      "  \n" ..
+      "end" 
+    },
+
+    { "for,fori", "for - simple",
+      "for i = %_1, Count do\n"..
+      "  \n" ..
+      "end" 
+    },
+
+    { "fora", "for - generic",
+      "for i, iVal in ipairs(aVal) do\n"..
+      "  %_\n" ..
+      "end" 
+    },
+
+    { "while", "while",
+      "while %_Condition_% do\n"..
+      "  \n" ..
+      "end" 
+    },
+
+    { "repeat", "repeat-until",
+      "repeat\n"..
+      "  \n" ..
+      "until %_Condition_%" 
+    },
+
+  } },
+}
+
+}}
