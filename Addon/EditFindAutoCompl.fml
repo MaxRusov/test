@@ -1,0 +1,79 @@
+﻿//Макрос автозавершения слов. (с) SimSU
+//Используется плагин EditFind Максима Русова.
+
+// Просто набирайте текст в редакторе и набираемое слово будет автоматически
+// дополняться до ближайшего ранее набранного слова, чтобы подтвердить дополнение
+// нажмите CtrlSpace (Контрол + Пробел).
+const EditFind  = 0x444E4645
+
+macro
+  Name="SimSU_EdtFndACompl"
+  Descr="Editor: Автозавершение слов. (c) SimSU"
+  Key="Q W E R T Y U I O P [ ]"
+  Key="A S D F G H J K L ; '"
+  Key="Z X C V B N M , ."
+  Key="1 2 3 4 5 6 7 8 9 0 _"
+  Key="ShiftQ ShiftW ShiftE ShiftR ShiftT ShiftY ShiftU ShiftI ShiftO ShiftP Shift[ Shift]"
+  Key="ShiftA ShiftS ShiftD ShiftF ShiftG ShiftH ShiftJ ShiftK ShiftL Shift; Shift'"
+  Key="ShiftZ ShiftX ShiftC ShiftV ShiftB ShiftN ShiftM Shift, Shift."
+  EatOnRun=0
+  Area="Editor"
+{{
+  $if (!callplugin(#%EditFind, ""))
+//  MsgBox("Error", "EdtFind plugin not installed")
+    $exit
+  $end
+  $IF (%%SimSU_EdtFndACompl) // Удалим предыдущее дополнение вручную, а то могут постоянные блоки и т.п.
+    CtrlD
+    %%SimSU_EdtFndACompl=0;
+  $END
+//    $Akey
+//  Eval(Key(#Akey)) //EatOnRun=0
+  bm.push()
+  CtrlShiftLeft
+  %BegWord=Editor.SelValue; //Начало слова.
+  $IF (!CallPlugin(#%EditFind,"Highlight:0 Loop:0 Error:0 Reverse:1 RegExp:1 Find (^|\\W)"+%BegWord+"\\w+"))
+    //Не нашли к началу, попытаемся к концу файла.
+    CallPlugin(#%EditFind,"Highlight:0 Loop:0 Error:0 Reverse:0 RegExp:1 Find (^|\\W)"+%BegWord+"\\w+")
+  $END
+  %FindTxt=Editor.SelValue;
+  %AddTxt=substr(%FindTxt,index(%FindTxt,%BegWord)+Len(%BegWord)); //Окончание слова.
+  bm.pop()
+  $IF (Len(%AddTxt)>0)
+    print(%AddTxt)
+    $REP (len(%AddTxt)) ShiftLeft $END //Выделим что дописали.
+    %%SimSU_EdtFndACompl=1;
+  $ELSE
+    %%SimSU_EdtFndACompl=0;
+  $END
+}}
+
+//Зададим клавиши принятие автозавершения.
+macro
+  Name="SimSU_EdtFndAComplOk"
+  Descr="Editor: Автозавершение слов (Принять). (c) SimSU"
+  Key="CtrlSpace"
+  Area="Editor"
+{{
+  $IF (%%SimSU_EdtFndACompl)
+    Editor.Sel(1,1)
+    CtrlU
+    %%SimSU_EdtFndACompl=0;
+  $END
+}}
+
+//Зададим клавиши удаляющие автозавершение.
+macro
+  Name="SimSU_EdtFndAComplCncl"
+  Descr="Editor: Автозавершение слов (Отменить). (c) SimSU"
+  Key="Left Right Up Down BS"
+  Area="Editor"
+{{
+  $IF (%%SimSU_EdtFndACompl)
+    CtrlD
+    %%SimSU_EdtFndACompl=0;
+  $END
+//    $Akey
+  Eval(Key(#Akey))
+}}
+;; http://code.google.com/p/simsufar/

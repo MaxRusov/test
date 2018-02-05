@@ -1,0 +1,29 @@
+﻿
+// 110205 - требуется "SizeManager 1.1.152.534" или выше
+//        - переведен на GUID
+//        - работают RCtrlPgUp и RCtrlPgDn
+//        - добавлена обработка Tab
+// 110206 - убран "лишний" макрос
+
+const SizeManager="Size Manager"
+const SizeManager1="{5431982E-24CA-4BAC-8831-177300C2405C}"
+const SizeManager2="{E41F6EFF-49DA-40D8-BB50-37D355D812CC}"
+
+macro
+  Descr="Size manager helper"
+  Key="Enter Home End Up Down PgUp PgDn Left Right CtrlPgUp CtrlPgDn Tab"
+  Area="Dialog.SizeManager1"
+  Area="Dialog.SizeManager2"
+{{
+  %key=Key(#AKey);
+  $if (substr(%key,0,5)=="RCtrl") %key=substr(%key,1); $end
+  Esc
+  eval(%key)
+  F11
+  $if (menu.select(#%SizeManager,2) > 0)
+    Enter
+  $else
+    MsgBox(#%SizeManager,"Plugin was not found in list!",1)
+    Esc
+  $end
+}}

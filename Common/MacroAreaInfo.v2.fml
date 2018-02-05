@@ -1,0 +1,38 @@
+﻿macro Descr="Current MacroArea/Dialog GUID information" Key="CtrlAltF12"
+{{
+  %s = "MacroArea="+MacroArea+"\n"+"Title=«"+Title+"»";
+  $if (Menu||MainMenu||UserMenu||Disks)
+    %s = %s + "\nMenu.Value=«"+Menu.Value+"»";
+  $end
+  $if (Dialog)
+    %s = %s + "\nDlg.Info.Id=«"+Dlg.Info.Id+"»";
+    %s = %s + "\nDlg.ItemCount="+Dlg.ItemCount+"; .CurPos="+Dlg.CurPos+"; .ItemType="+Dlg.ItemType+"; Value=«"+dlg.getvalue(Dlg.CurPos,0)+"»";
+    %s = %s + "\nEditor.sel(0,4)="+Editor.sel(0,4)+"; Editor.sel(0,1)="+Editor.sel(0,1)+"; Editor.sel(0,3)="+Editor.sel(0,3);
+  $end
+  $if (Menu)
+    %s = %s + "\nDlg.ItemCount="+Dlg.ItemCount+"; .CurPos="+Dlg.CurPos+"; .ItemType="+Dlg.ItemType+"; Value=«"+dlg.getvalue(Dlg.CurPos,0)+"»";
+    %s = %s + "\nMenu.Info.Id=«"+Menu.Info.Id+"»";
+    %s = %s + "\nMenu.Value=«"+Menu.Value+"»";
+  $end
+  $if (Shell)
+    %s = %s + "\nFilePanel="+APanel.FilePanel+"; Plugin="+APanel.Plugin+"; CurPos="+APanel.CurPos+"; ItemCount="+APanel.ItemCount+"; SelCount="+APanel.SelCount;
+    %s = %s + "; Filter="+APanel.Filter;
+    %s = %s + "\nCurrent=«"+APanel.Current+"»\nPath=«"+APanel.Path+"»\nPath0=«"+APanel.Path0+"»";
+    $if (APanel.Plugin)
+      %s = %s + "\nPrefix=«"+APanel.Prefix+"»; Format=«"+APanel.Format+"»\nHostFile=«"+APanel.HostFile+"»";
+    $end
+  $end
+  $if (Help)
+    %s = %s + "\nHelp.FileName=«"+Help.FileName+"»\nHelp.Topic=«"+Help.Topic+"»\nHelp.SelTopic=«"+Help.SelTopic+"»";
+  $end
+  $if (Editor)
+    %s = %s + "\nEditor.CurLine="+Editor.CurLine+"; .CurPos="+Editor.CurPos+"; .RealPos="+Editor.RealPos;
+    %s = %s + "\nsel(0,0)="+editor.sel(0,0)+"; sel(0,1)="+editor.sel(0,1)+"; sel(0,2)="+editor.sel(0,2)+"; sel(0,3)="+editor.sel(0,3)+"; sel(0,4)="+editor.sel(0,4);
+    %s = %s + "\npos(0,1)="+editor.pos(0,1)+"; pos(0,2)="+editor.pos(0,2)+"; pos(0,3)="+editor.pos(0,3)+"; pos(0,4)="+editor.pos(0,4)+"; pos(0,5)="+editor.pos(0,5)+"; pos(0,6)="+editor.pos(0,6);
+    %s = %s + "\nEditor.Value=«"+Editor.Value+"»";
+  $end
+  $if (Viewer)
+    %s = %s + "\nViewer.State=0x"+itoa(Viewer.State,16);
+  $end
+  MsgBox("Current info",%s)
+}}

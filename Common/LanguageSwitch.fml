@@ -1,0 +1,34 @@
+﻿
+macro
+  Descr="Switch interface language English<-->Russian"
+  Area="Shell Editor Viewer"
+{{
+  %w = "";
+  $if (Editor || Viewer)
+    F12
+    $if (Menu)
+      %w = substr(Menu.Value,0,index(Menu.Value,".")+2);
+      mmode(1,0)
+      0
+    $else
+      Esc
+    $end
+  $end
+  $if (Shell)
+    $if (Env("FARLANG") == "English")
+      F9 o g r Enter
+    $else $if (Env("FARLANG") == "Russian")
+      F9 h z e Enter
+    $end $end
+  $else
+    $Exit
+  $end
+  $if (%w != "" && Shell)
+    F12
+    $if (menu.Select(%w,1)>0)
+      Enter
+    $else
+      Esc
+    $end
+  $end
+}}

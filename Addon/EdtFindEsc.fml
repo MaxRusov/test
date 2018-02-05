@@ -1,0 +1,14 @@
+﻿macro Description="EditorFind: сброс или Esc" Area="Editor" Key="Esc"
+{{
+  F11
+  $if (menu.select("Editor Find",2)<=0)
+    Esc Esc $Exit
+  $end
+  Enter
+  %s=menu.select("A ",1);
+  $if (%s==10)
+    A Editor.Sel(4)
+  $else
+    Esc Esc
+  $end
+}}

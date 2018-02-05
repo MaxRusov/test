@@ -1,0 +1,74 @@
+const VisualCompare = "Visual Compare"
+
+Macro Area="Dialog.VisualCompare" Key="Add" DisableOutput=1
+{{
+  $if (Dlg.ItemType==255)
+    Esc Down Enter
+  $else
+    Add
+  $end
+}}
+
+Macro Area="Dialog.VisualCompare" Key="Subtract" DisableOutput=1
+{{
+  $if (Dlg.ItemType==255)
+    Esc Up Enter
+  $else
+    Subtract
+  $end
+}}
+
+
+macro Descr="VisualCompare Left:8" Area="Dialog.VisualCompare" Key="AltLeft"
+{{
+  $if (Dlg.ItemType==255)
+    $Rep(8) Left $End
+  $else
+    AltLeft
+  $end
+}}
+
+macro Descr="VisualCompare Right:8" Area="Dialog.VisualCompare" Key="AltRight"
+{{
+  $if (Dlg.ItemType==255)
+    $Rep(8) Right $End
+  $else
+    AltRight
+  $end
+}}
+
+macro Descr="VisualCompare Left:80" Area="Dialog.VisualCompare" Key="Home"
+{{
+  $if (Dlg.ItemType==255)
+    $Rep(80) Left $End
+  $else
+    Home
+  $end
+}}
+
+macro Descr="VisualCompare Right:80" Area="Dialog.VisualCompare" Key="End"
+{{
+  $if (Dlg.ItemType==255)
+    $Rep(80) Right $End
+  $else
+    End
+  $end
+}}
+
+macro Descr="VisualCompare Beginning of the file" Area="Dialog.VisualCompare" Key="CtrlHome"
+{{
+  $if (Dlg.ItemType==255)
+    Home
+  $else
+    CtrlHome
+  $end
+}}
+
+macro Descr="VisualCompare End of the file" Area="Dialog.VisualCompare" Key="CtrlEnd"
+{{
+  $if (Dlg.ItemType==255)
+    End
+  $else
+    CtrlEnd
+  $end
+}}

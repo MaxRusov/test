@@ -1,0 +1,57 @@
+﻿Macro
+    Area="Editor"
+    Key="F7"
+    Description="EditorFind: Если есть выделение - 'Find word...', иначе 'Find...'"
+    DisableOutput=1
+{{
+  BM.add()
+  %s=Selected; F11
+  $if (menu.Select("Editor Find",2)<=0)
+    MsgBox("Editor Find","Plugin was not found in list!",1) $Exit
+  $end
+  Enter
+  $if (%s)
+    2
+  $else
+    1
+  $end
+}}
+
+Macro
+    Area="Editor"
+    Key="CtrlF7"
+    Description="EditorFind: Если есть выделение - 'Replace word...', иначе 'Replace...'"
+    DisableOutput=1
+{{
+  BM.add()
+  %s=Selected; F11
+  $if (menu.Select("Editor Find",2)<=0)
+    MsgBox("Editor Find","Plugin was not found in list!",1) $Exit
+  $end
+  Enter
+  $if (%s)
+    4
+  $else
+    3
+  $end
+}}
+
+Macro
+    Area="Editor"
+    Key="ShiftF7 F3"
+    Description="EditorFind: Продолжить последнее действие (поиск/замена)"
+    DisableOutput=1
+{{
+  BM.add()
+  callplugin(0x444e4645,5)
+}}
+
+Macro
+    Area="Editor"
+    Key="AltShiftF7"
+    Description="EditorFind: Продолжить назад последнее действие (поиск/замена)"
+    DisableOutput=1
+{{
+  BM.add()
+  callplugin(0x444e4645,6)
+}}

@@ -1,0 +1,21 @@
+﻿macro Descr="Current MacroArea/Dialog GUID information" Key="CtrlAltF12"
+{{
+  %s = "MacroArea="+MacroArea+"\n"+"Title=«"+Title+"»";
+  $if (Menu||MainMenu||UserMenu||Disks)
+    %s = %s + "\nMenu.Value=«"+Menu.Value+"»";
+  $end
+  $if (Dialog)
+    %s = %s + "\nDlg.Info.Id=«"+Dlg.Info.Id+"»";
+    %s = %s + "\nDlg.ItemCount="+Dlg.ItemCount+"; .CurPos="+Dlg.CurPos+"; .ItemType=";
+    %s = %s + Dlg.ItemType+"; Value=«"+dlg.getvalue(Dlg.CurPos,0)+"»";
+  $end
+  $if (Shell)
+    %s = %s + "\nFilePanel="+APanel.FilePanel+"; Plugin="+APanel.Plugin;
+    %s = %s + "; CurPos="+APanel.CurPos+"; ItemCount="+APanel.ItemCount+"; SelCount=";
+    %s = %s + APanel.SelCount+"\nCurrent=«"+APanel.Current+"»\nPath=«"+APanel.Path+"»";
+    $if (APanel.Plugin)
+      %s = %s + "\nPrefix=«"+APanel.Prefix+"»\nHostFile=«"+APanel.HostFile+"»";
+    $end
+  $end
+  MsgBox("Current info",%s)
+}}

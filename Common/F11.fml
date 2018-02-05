@@ -1,0 +1,212 @@
+Macro
+  Area=""
+  Key="F11"
+  Description="F11 and hilight last selected plugin"
+  DisableOutput=1
+{{
+%%CurMacroArea=MacroArea;
+$If (%%CurMacroArea=="Search")
+  %%CurMacroArea="Shell";
+$End
+%%CurPluginsMenuTitle="Plugin commands";
+F11
+$If (Menu && Title==%%CurPluginsMenuTitle)
+  %PlugName=""; %PlugNo=0; %k=1; %a=%%CurMacroArea;
+  $While (%k<=2)
+    $If (%k==1)
+      %n=index(%%LastSelPlug,%a+"=");
+    $Else
+      %n=index(%%LastSelPlug,"=");
+    $End
+    $If (%n>-1)
+      $If (%k==2)
+        %a=substr(%%LastSelPlug,0,%n);
+        $If (%a==%%CurMacroArea)
+          $Exit
+        $End
+        %n=0;
+      $End
+      %b=%n+len(%a)+1; %e=%b;
+      $While (substr(%%LastSelPlug,%e,1)!=";")
+        %e=%e+1;
+      $End
+      %l=atoi(substr(%%LastSelPlug,%b,%e-%b),10); %s=substr(%%LastSelPlug,%e+1,%l); %n=index(%s,";");
+      $If (%n>-1)
+        %PlugNo=atoi(substr(%s,0,%n),10); %PlugName=substr(%s,%n+1);
+      $End
+      $If (%PlugName!="")
+        %n=Menu.Select(%PlugName,0);
+        $If (%n>0)
+          $Exit
+        $End
+      $End
+    $End
+    %k=%k+1;
+  $End
+$End
+}}
+
+Macro
+  Area="Shell"
+  Key="AltShiftF9"
+  Description="AltShiftF9 and hilight last selected plugin"
+  DisableOutput=0
+{{
+%%CurMacroArea="AltShiftF9";
+%%CurPluginsMenuTitle="Plugins configuration";
+AltShiftF9
+$If (Menu && Title==%%CurPluginsMenuTitle)
+  %PlugName=""; %PlugNo=0; %k=1; %a=%%CurMacroArea;
+  $While (%k<=2)
+    $If (%k==1)
+      %n=index(%%LastSelPlug,%a+"=");
+    $Else
+      %n=index(%%LastSelPlug,"=");
+    $End
+    $If (%n>-1)
+      $If (%k==2)
+        %a=substr(%%LastSelPlug,0,%n);
+        $If (%a==%%CurMacroArea)
+          $Exit
+        $End
+        %n=0;
+      $End
+      %b=%n+len(%a)+1; %e=%b;
+      $While (substr(%%LastSelPlug,%e,1)!=";")
+        %e=%e+1;
+      $End
+      %l=atoi(substr(%%LastSelPlug,%b,%e-%b),10); %s=substr(%%LastSelPlug,%e+1,%l); %n=index(%s,";");
+      $If (%n>-1)
+        %PlugNo=atoi(substr(%s,0,%n),10); %PlugName=substr(%s,%n+1);
+      $End
+      $If (%PlugName!="")
+        %n=Menu.Select(%PlugName,0);
+        $If (%n>0)
+          $Exit
+        $End
+      $End
+    $End
+    %k=%k+1;
+  $End
+$End
+}}
+
+Macro
+  Area="Menu"
+  Key="Down"
+  Description="F11: Autoselect last plugin"
+  DisableOutput=1
+{{
+    ;; $AKey %Cont=1; $If (%Cont==1) eval(%%OtherMenu_F11) $End
+    Eval(Key(#AKey)) %Cont=1;
+    $If (%Cont==1)
+		$If (Title==%%CurPluginsMenuTitle && len(%%CurMacroArea)>0)
+		  %Cont=0; %n=index(%%LastSelPlug,%%CurMacroArea+"=");
+		  $If (%n>-1)
+		    %b=%n+len(%%CurMacroArea)+1; %e=%b;
+		    $While (substr(%%LastSelPlug,%e,1)!=";")
+		      %e=%e+1;
+		    $End
+		    %l=atoi(substr(%%LastSelPlug,%b,%e-%b),10); %%LastSelPlug=substr(%%LastSelPlug,0,%n)+substr(%%LastSelPlug,%e+%l+2);
+		  $End
+		  %inf=CurPos+";"+Menu.Value; %%LastSelPlug=%%CurMacroArea+"="+len(%inf)+";"+%inf+";"+%%LastSelPlug; msave("%%LastSelPlug")
+		$End
+    $End
+}}
+
+
+Macro
+  Area="Menu"
+  Key="End"
+  Description="F11: Autoselect last plugin"
+  DisableOutput=1
+{{
+    ;; $AKey %Cont=1; $If (%Cont==1) eval(%%OtherMenu_F11) $End
+    Eval(Key(#AKey)) %Cont=1;
+    $If (%Cont==1)
+		$If (Title==%%CurPluginsMenuTitle && len(%%CurMacroArea)>0)
+		  %Cont=0; %n=index(%%LastSelPlug,%%CurMacroArea+"=");
+		  $If (%n>-1)
+		    %b=%n+len(%%CurMacroArea)+1; %e=%b;
+		    $While (substr(%%LastSelPlug,%e,1)!=";")
+		      %e=%e+1;
+		    $End
+		    %l=atoi(substr(%%LastSelPlug,%b,%e-%b),10); %%LastSelPlug=substr(%%LastSelPlug,0,%n)+substr(%%LastSelPlug,%e+%l+2);
+		  $End
+		  %inf=CurPos+";"+Menu.Value; %%LastSelPlug=%%CurMacroArea+"="+len(%inf)+";"+%inf+";"+%%LastSelPlug; msave("%%LastSelPlug")
+		$End
+    $End
+}}
+
+
+Macro
+  Area="Menu"
+  Key="Enter"
+  Description="F11: Autoselect last plugin"
+  DisableOutput=1
+{{
+    ;; %Cont=1; $If (%Cont==1) eval(%%OtherMenu_F11) $End mmode(1,2) $AKey
+    %Cont=1;
+    $If (%Cont==1)
+		$If (Title==%%CurPluginsMenuTitle && len(%%CurMacroArea)>0)
+		  %Cont=0; %n=index(%%LastSelPlug,%%CurMacroArea+"=");
+		  $If (%n>-1)
+		    %b=%n+len(%%CurMacroArea)+1; %e=%b;
+		    $While (substr(%%LastSelPlug,%e,1)!=";")
+		      %e=%e+1;
+		    $End
+		    %l=atoi(substr(%%LastSelPlug,%b,%e-%b),10); %%LastSelPlug=substr(%%LastSelPlug,0,%n)+substr(%%LastSelPlug,%e+%l+2);
+		  $End
+		  %inf=CurPos+";"+Menu.Value; %%LastSelPlug=%%CurMacroArea+"="+len(%inf)+";"+%inf+";"+%%LastSelPlug; msave("%%LastSelPlug")
+		$End
+    $End
+    mmode(1,2) Eval(Key(#AKey))
+}}
+
+
+Macro
+  Area="Menu"
+  Key="Home"
+  Description="F11: Autoselect last plugin"
+  DisableOutput=1
+{{
+    ;; $AKey %Cont=1; $If (%Cont==1) eval(%%OtherMenu_F11) $End
+    Eval(Key(#AKey)) %Cont=1;
+    $If (%Cont==1)
+		$If (Title==%%CurPluginsMenuTitle && len(%%CurMacroArea)>0)
+		  %Cont=0; %n=index(%%LastSelPlug,%%CurMacroArea+"=");
+		  $If (%n>-1)
+		    %b=%n+len(%%CurMacroArea)+1; %e=%b;
+		    $While (substr(%%LastSelPlug,%e,1)!=";")
+		      %e=%e+1;
+		    $End
+		    %l=atoi(substr(%%LastSelPlug,%b,%e-%b),10); %%LastSelPlug=substr(%%LastSelPlug,0,%n)+substr(%%LastSelPlug,%e+%l+2);
+		  $End
+		  %inf=CurPos+";"+Menu.Value; %%LastSelPlug=%%CurMacroArea+"="+len(%inf)+";"+%inf+";"+%%LastSelPlug; msave("%%LastSelPlug")
+		$End
+    $End
+}}
+
+
+Macro
+  Area="Menu"
+  Key="Up"
+  Description="F11: Autoselect last plugin"
+  DisableOutput=1
+{{
+    ;; $AKey %Cont=1; $If (%Cont==1) eval(%%OtherMenu_F11) $End
+    Eval(Key(#AKey)) %Cont=1;
+    $If (%Cont==1)
+		$If (Title==%%CurPluginsMenuTitle && len(%%CurMacroArea)>0)
+		  %Cont=0; %n=index(%%LastSelPlug,%%CurMacroArea+"=");
+		  $If (%n>-1)
+		    %b=%n+len(%%CurMacroArea)+1; %e=%b;
+		    $While (substr(%%LastSelPlug,%e,1)!=";")
+		      %e=%e+1;
+		    $End
+		    %l=atoi(substr(%%LastSelPlug,%b,%e-%b),10); %%LastSelPlug=substr(%%LastSelPlug,0,%n)+substr(%%LastSelPlug,%e+%l+2);
+		  $End
+		  %inf=CurPos+";"+Menu.Value; %%LastSelPlug=%%CurMacroArea+"="+len(%inf)+";"+%inf+";"+%%LastSelPlug; msave("%%LastSelPlug")
+		$End
+    $End
+}}

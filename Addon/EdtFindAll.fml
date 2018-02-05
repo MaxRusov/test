@@ -1,0 +1,25 @@
+/**
+ *
+ */
+
+macro Descr = "Search all (editFind)"
+Key = "CtrlF"
+Area = "Editor"
+{{
+%word = "";
+$if (Editor.Sel(0,4)!=0)
+	%word = Editor.SelValue;
+$else
+	$SelWord
+	%word = Editor.SelValue;
+	Editor.sel(4)
+	$end
+%word = prompt("Select all", "Write string to search",0x01,  %word);
+F11
+menu.Select("Editor Find",2)
+Enter 1
+print(%word);
+AltD
+
+
+}}

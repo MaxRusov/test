@@ -1,0 +1,38 @@
+
+const speed = 256 //Начальная задержка. Чем меньше тем выше начальная скорость.
+const acceler = 2 //Коэффициент ускорения.
+const slowing = 4 //Коэффициент замедления.
+const magickey = 0xFFFFFFFF //значение waitkey(%t,1) когда клавиш не нажимали.
+
+macro
+  Descr="Fast Wheel Alternative by SimSU"
+  Bind="MsWheelUp MsWheelDown"
+  Area="Editor Viewer Dialog"
+  DisableOutput=0
+  Priority=1
+{{
+  %r=1; %c=%r;
+  $WHILE (%c>0)
+    %t=#%speed/%c; $IF (%t<1) %t=1; $END
+    %n=%c; $IF (%n>(far.height-2)/4) %n=(far.height-2)/4; $END
+    $IF (%c<%r) %n=%n/2; $END
+    %r=%c;
+    $WHILE (%c==%r)
+      $IF (#AKey==MsWheelDown) $IF (Editor) CtrlDown $ELSE Down $END $END
+      $IF (#AKey==MsWheelUp) $IF (Editor) CtrlUp $ELSE Up $END  $END
+      %VK=waitkey(%t,1);
+      %n=%n-1;
+      $IF (%VK==#AKey)
+        %c=%c*#%acceler;
+      $ELSE
+        $IF(%VK!=0xFFFFFFFF)  //#%magickey почему то не работает.
+          %c=0;
+        $ELSE
+          $IF (%n<1)
+            %c=%c/#%slowing;
+          $END
+        $END
+      $END
+    $END
+  $END
+}}

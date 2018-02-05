@@ -1,0 +1,28 @@
+﻿macro
+  Name = "InputMacro"
+  Descr = "Input Macro"
+  Key = "CtrlAltF12"
+{{
+  $if (env("FARLANG")=="Russian")
+    %title = "Input Far macro";
+    %msg = "Введите текст макроса (Far)";
+    %errtitle = "Ошибка выполнения макроса";
+    %err = "Функция eval(…) вернула ошибку: ";
+    %errcont = "\nВыполнить другой макрос?";
+  $else
+    %title = "Input Far macro";
+    %msg = "Type macro text (Far)";
+    %errtitle = "Macro execution failed";
+    %err = "eval(…) function returns error: ";
+    %errcont = "\nExecute another macros?";
+  $end
+  %s=prompt(%title,%msg,0,"","InputMacroHistory");
+  $while (%s && %s!="")
+    %i=eval(%s);
+    $if (%i!=0)
+      %r=MsgBox(%errtitle,%err+itoa(%i)+%errcont,0x00040000);
+      $if (%r!=1) $Exit $End
+    $end
+    %s=prompt(%title,%msg,0,"","InputMacroHistory");
+  $end
+}}
