@@ -1,0 +1,81 @@
+﻿;;
+;; Смена кодировки редактора путем перезагрузки файла.
+;; Позволяет переключаться между однобайтовыми и многобайтовыми кодировками
+;; (c) Max Rusov
+;;
+
+macro
+  Descr="Editor: Change Favorite Code Page"
+  Key="ShiftF8"
+  Area="Editor"
+{{
+   if band(Editor.State, 0x800) ~= 0 then  
+    msgbox("Change Code Page", "Not supported in modal editor", 0x1);
+    exit()
+  end
+
+  Str =        "&ANSI    |  1251\n";
+  Str = Str .. "&OEM     |   866\n";
+  Str = Str .. "UTF-&8   | 65001\n";
+  Str = Str .. "&Unicode |  1200\n";
+  --Прочие любимые кодировки
+
+
+  -- Попробуем узнать текущую кодировку
+  Keys("ShiftF2")
+  Res = mf.trim(Dlg.GetValue(6,0));
+  Keys("Esc")
+
+  Code = mf.substr(Res, 0, mf.index(Res, " ") - 1);
+
+  Pos = mf.index(Str, Code.."\n");
+  if  Pos >= 0 then 
+    Init = mf.substr(Str, 0, Pos + mf.len(Code)); 
+    Pos = mf.rindex(Init, "\n");
+    if  Pos >= 0 then 
+      Init = mf.substr(Init, Pos + 1); 
+    end
+    Init = mf.replace(Init, "&", "");
+--  MsgBox("", %Init);
+  end
+
+
+  Res = Menu.Show(Str, "Code Pages", 0x10, Init);
+  if Res == "" then 
+    exit()
+  end
+
+  Code = mf.trim(mf.substr(Res, mf.index(Res, "|") + 1))
+
+  if band(Editor.State, 0x8) ~= 0 then  
+    Res = msgbox("Change Code Page", "File has been modified. Save?", bor(0x1, 0x50000))
+    if (Res ~= 1) and (Res ~= 2) then 
+      exit()
+    end
+    if  Res==1 then 
+      Keys("F2")
+    end
+  end
+
+  FileName = Editor.FileName;
+  
+  Keys("ShiftF4")
+  print( FileName ); 
+  Keys("Tab")
+  Keys("CtrlDown")
+  Menu.Select(Code, 1);
+  Keys("Enter")
+  
+  Keys("Enter")
+  Keys("e") --Reload
+}}
+
+
+macro
+  Descr="Editor: Change All Code Page"
+  Key="AltShiftF8"
+  Area="Editor"
+{{
+  Keys("ShiftF8")
+}}
+

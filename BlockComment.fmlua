@@ -1,0 +1,225 @@
+﻿;;
+;; Закомментировать или раскомментировать выделенный блок
+;; (c) Max Rusov
+;;
+
+macro Descr="Comment/uncomment selected block" Area="Editor" Keys="Ctrl-:Release"
+{{
+  #include_macro_once "CommentFunc"
+  _G.ToggleComment(nil, _G.FindComment( Editor.FileName ) )
+}}
+
+
+macro Descr="Uncomment selected block" Area="Editor" Keys="CtrlShift-:Release"
+{{
+  #include_macro_once "CommentFunc"
+  local Comment1 = _G.FindComment( Editor.FileName )
+  if type(Comment1) == "string" then
+    _G.UnCommentLineBlock(nil, Comment1 )
+  end
+}}
+
+
+macro Descr="Comment/uncomment selected block (alternative)" Area="Editor" Keys="Ctrl-:Hold"
+{{
+  #include_macro_once "CommentFunc"
+  local Comment1, Comment2 = _G.FindComment( Editor.FileName )
+  if Comment2 then
+    _G.ToggleComment(Id, Comment2 )
+  else
+    mf.beep()
+  end
+}}
+
+
+//-----------------------------------------------------------------------------
+// Глобальные функции
+
+macro Name="CommentFunc"
+{{
+  local Settings = {
+    {"pas,pp,dpr",     "//", {"(*", "*)"}     },
+    {"lua,fmlua",      "--", {"--[[", "--]]"} },
+    {"bat",            "rem " 		      },
+    {"htm,html,xml",   {"<!--", "-->"}        }	
+  }
+
+
+  function _G.FindComment(AName)
+    local vExt = mf.fsplit(AName, 8):sub(2):lower()
+    for i, vRow in ipairs(Settings) do
+      for iExt in vRow[1]:gmatch("[^%s,]+") do
+        if iExt == vExt then 
+          return vRow[2], vRow[3]
+        end
+      end
+    end
+    return "//", {"/*", "*/"}
+  end
+
+--  function _G.FindComment(AName)
+--    local vExt = mf.fsplit(AName, 8):sub(2)
+--    local vReg = regex.new("^(.*,)*\\s*"..vExt.."\\s*(,.*)*$")
+--    for i = 1, table.maxn(Settings) do
+--      local vRow = Settings[i]
+--      if vReg:find(vRow[1]) then
+--        return vRow[2], vRow[3]
+--      end
+--    end
+--    return "//", {"/*", "*/"}
+--  end
+
+
+  function CorrectBlockWidth(ADelta)
+    local vInfo = editor.GetSelection(Id)
+    editor.Select(Id, vInfo.BlockType, vInfo.StartLine, vInfo.StartPos, 
+      vInfo.EndPos - vInfo.StartPos + ADelta, 
+      vInfo.EndLine - vInfo.StartLine + 1)
+  end
+
+  ------------------------------------------------------------------------------
+
+  function _G.CommentLineBlock(Id, AComment)
+    local vInfo = editor.GetSelection(Id)
+    if not vInfo then return end
+    editor.UndoRedo(Id, "EUR_BEGIN")
+    for i = vInfo.StartLine, vInfo.EndLine do
+      local vRow = editor.GetString(Id, i)
+      local vStr = vRow.StringText
+      vStr = vStr:sub(0, vRow.SelStart) .. AComment .. vStr:sub(vRow.SelStart+1)
+      editor.SetString(Id, i, vStr, vRow.StringEOL)
+    end
+    editor.UndoRedo(Id, "EUR_END")
+  end
+
+  function _G.UnCommentLineBlock(Id, AComment)
+    local vLen = AComment:len()
+    local vInfo = editor.GetSelection(Id)
+    if not vInfo then return end
+    editor.UndoRedo(Id, "EUR_BEGIN")
+    for i = vInfo.StartLine, vInfo.EndLine do
+      local vRow = editor.GetString(Id, i)
+      local vStr = vRow.StringText
+      local vPos = vRow.SelStart
+      if vStr:sub(vPos+1, vPos+vLen) == AComment then
+        vStr = vStr:sub(0, vPos) .. vStr:sub(vPos+1+vLen)
+        editor.SetString(Id, i, vStr, vRow.StringEOL)
+      end
+    end
+    editor.UndoRedo(Id, "EUR_END")
+  end
+
+  function _G.IsBlockLineComment(Id, AComment)
+    local vLen = AComment:len()
+    local vInfo = editor.GetSelection(Id)
+    if not vInfo then return false end
+    for i = vInfo.StartLine, vInfo.EndLine do
+      local vRow = editor.GetString(Id, i)
+      local vStr = vRow.StringText
+      local vPos = vRow.SelStart
+      if vStr:sub(vPos+1, vPos+vLen) ~= AComment then
+        return false
+      end
+    end
+    return true
+  end
+
+  function _G.ToggleCommentLineBlock(Id, AComment)
+    if not _G.IsBlockLineComment(Id, AComment) then
+      _G.CommentLineBlock(Id, AComment)
+    else
+      _G.UnCommentLineBlock(Id, AComment)
+    end
+  end
+
+------------------------------------------------------------------------------
+
+  function _G.CommentStreamBlock(Id, AComment)
+    local vRow, vStr, vCol, vCor
+    local vInfo = editor.GetSelection(Id)
+    if not vInfo then return end
+    editor.UndoRedo(Id, "EUR_BEGIN")
+
+    vRow = editor.GetString(Id, vInfo.EndLine)
+    vStr = vRow.StringText
+    vCor = vRow.SelEnd >= 0
+    vCol = vRow.SelEnd >= 0 and vRow.SelEnd or vRow.StringLength
+    vStr = vStr:sub(0, vCol) .. AComment[2] .. vStr:sub(vCol+1)
+    editor.SetString(Id, vInfo.EndLine, vStr, vRow.StringEOL)
+
+    vRow = editor.GetString(Id, vInfo.StartLine)
+    vStr = vRow.StringText
+    vStr = vStr:sub(0, vRow.SelStart) .. AComment[1] .. vStr:sub(vRow.SelStart+1)
+    editor.SetString(Id, vInfo.StartLine, vStr, vRow.StringEOL)
+
+    editor.UndoRedo(Id, "EUR_END")
+
+    if vCor then
+      CorrectBlockWidth( AComment[2]:len() + (vInfo.StartLine == vInfo.EndLine and AComment[1]:len() or 0) )
+    end
+  end
+
+
+  function _G.UnCommentStreamBlock(Id, AComment)
+    local vRow, vStr, vCol, vCor
+    local vInfo = editor.GetSelection(Id)
+    if not vInfo then return end
+
+    editor.UndoRedo(Id, "EUR_BEGIN")
+
+    vRow = editor.GetString(Id, vInfo.EndLine)
+    vCor = vRow.SelEnd >= 0
+    vCol = vRow.SelEnd >= 0 and vRow.SelEnd or vRow.StringLength
+    vStr = vRow.StringText
+    vStr = vStr:sub(0, vCol - AComment[2]:len()) .. vStr:sub(vCol + 1)
+    editor.SetString(Id, vInfo.EndLine, vStr, vRow.StringEOL)
+
+    vRow = editor.GetString(Id, vInfo.StartLine)
+    vStr = vRow.StringText
+    vStr = vStr:sub(0, vRow.SelStart) .. vStr:sub(vRow.SelStart + AComment[1]:len() + 1)
+    editor.SetString(Id, vInfo.StartLine, vStr, vRow.StringEOL)
+
+    editor.UndoRedo(Id, "EUR_END")
+
+    if vCor then
+      CorrectBlockWidth( -( AComment[2]:len() + (vInfo.StartLine == vInfo.EndLine and AComment[1]:len() or 0) ) )
+    end
+
+    return true
+  end
+
+
+  function _G.IsBlockStreamComment(Id, AComment)
+    local vInfo = editor.GetSelection(Id)
+    if not vInfo then return false end
+
+    local vRow1 = editor.GetString(Id, vInfo.StartLine)
+    local vRow2 = editor.GetString(Id, vInfo.EndLine)
+
+    if (vRow1.StringText:sub(vRow1.SelStart + 1, vRow1.SelStart + AComment[1]:len()) ~= AComment[1]) or
+      (vRow2.StringText:sub(vRow2.SelEnd - AComment[2]:len() + 1, vRow2.SelEnd) ~= AComment[2]) then
+      return false
+    end
+
+    return true
+  end
+
+
+  function _G.ToggleCommentStreamBlock(Id, AComment)
+    if not _G.IsBlockStreamComment(Id, AComment) then
+      _G.CommentStreamBlock(Id, AComment)
+    else
+      _G.UnCommentStreamBlock(Id, AComment)
+    end
+  end
+
+
+  function _G.ToggleComment(Id, AComment)
+    if type(AComment) == "string" then
+      _G.ToggleCommentLineBlock(Id, AComment)
+    else
+      _G.ToggleCommentStreamBlock(Id, AComment)
+    end
+  end
+
+}}
