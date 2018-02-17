@@ -2,6 +2,7 @@
 ;; Закомментировать или раскомментировать выделенный блок
 ;; (c) Max Rusov
 ;;
+;;1
 
 macro Descr="Comment/uncomment selected block" Area="Editor" Keys="Ctrl-:Release"
 {{

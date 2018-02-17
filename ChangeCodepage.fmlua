@@ -3,6 +3,7 @@
 ;; Позволяет переключаться между однобайтовыми и многобайтовыми кодировками
 ;; (c) Max Rusov
 ;;
+;; 11
 
 macro
   Descr="Editor: Change Favorite Code Page"

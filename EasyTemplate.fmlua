@@ -2,6 +2,7 @@
 ;; Шаблоны автоподстановки
 ;; (c) Max Rusov
 ;;
+;; 22
 
 macro Descr="Easy Template: expand template" Area="Editor" Keys="Space"
 {{
